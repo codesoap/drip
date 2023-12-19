@@ -58,6 +58,17 @@ func init() {
 }
 
 func main() {
+	scanner := bufio.NewScanner(os.Stdin)
+	if !scanner.Scan() {
+		if err := scanner.Err(); err != nil {
+			fmt.Fprintln(os.Stderr, "Error: could not read standard input:", err)
+			os.Exit(1)
+		}
+		return
+	}
+	// Print first line immediately.
+	fmt.Println(scanner.Text())
+
 	var ticker *time.Ticker
 	if len(os.Args) == 3 {
 		ticker = time.NewTicker(randomDelay())
@@ -66,10 +77,9 @@ func main() {
 	}
 	defer ticker.Stop()
 
-	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
-		fmt.Println(scanner.Text())
 		<-ticker.C
+		fmt.Println(scanner.Text())
 		if len(os.Args) == 3 {
 			ticker.Reset(randomDelay())
 		}
