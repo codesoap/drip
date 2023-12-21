@@ -21,6 +21,9 @@ will be used.
 
 Delays must be numbers, suffixed with a unit: us, ms, s, m or h.
 
+If the delay is below 25ms, multiple lines will be printed at once due
+to technical limitations. Delay ranges are not allowed here.
+
 Examples:
 yes 'Hello, world!' | drip 500ms
 cat /path/to/chat/msgs | drip 10s 1m30s | send_chat_message -to paul

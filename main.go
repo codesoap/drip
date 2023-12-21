@@ -22,6 +22,9 @@ will be used.
 
 Delays must be numbers, suffixed with a unit: us, ms, s, m or h.
 
+If the delay is below 25ms, multiple lines will be printed at once due
+to technical limitations. Delay ranges are not allowed here.
+
 Examples:
 yes 'Hello, world!' | drip 500ms
 cat /path/to/chat/msgs | drip 10s 1m30s | send_chat_message -to paul
@@ -58,6 +61,19 @@ func init() {
 }
 
 func main() {
+	// Workaround for the fact that time.Ticker does not work well for
+	// small durations.
+	var linesPerTick int64 = 1
+	if dur1 < 25 * time.Millisecond {
+		if dur2 > 0 {
+			fmt.Fprintln(os.Stderr, "Error: Delay ranges are not allowed, if the lowest delay is below 25ms.")
+			os.Exit(1)
+		}
+		factor := 1 + 25 * time.Millisecond / dur1
+		dur1 *= factor
+		linesPerTick *= int64(factor)
+	}
+
 	scanner := bufio.NewScanner(os.Stdin)
 	if !scanner.Scan() {
 		if err := scanner.Err(); err != nil {
@@ -70,17 +86,20 @@ func main() {
 	fmt.Println(scanner.Text())
 
 	var ticker *time.Ticker
-	if len(os.Args) == 3 {
+	if dur2 > 0 {
 		ticker = time.NewTicker(randomDelay())
 	} else {
 		ticker = time.NewTicker(dur1)
 	}
 	defer ticker.Stop()
 
-	for scanner.Scan() {
-		<-ticker.C
+	var i int64
+	for i = 0; scanner.Scan(); i++ {
+		if i % linesPerTick == 0 {
+			<-ticker.C
+		}
 		fmt.Println(scanner.Text())
-		if len(os.Args) == 3 {
+		if dur2 > 0 {
 			ticker.Reset(randomDelay())
 		}
 	}
