@@ -28,3 +28,8 @@ Examples:
 yes 'Hello, world!' | drip 500ms
 cat /path/to/chat/msgs | drip 10s 1m30s | send_chat_message -to paul
 ```
+
+# Installation
+You can download precompiled binaries from the [releases
+page](https://github.com/codesoap/drip/releases) or install it with
+`go install github.com/codesoap/drip@latest`.
